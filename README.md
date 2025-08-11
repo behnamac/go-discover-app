@@ -8,6 +8,8 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
 - Location-based recommendations
 - Category-based exploration
 - Modern UI with shadcn/ui components
+- **Google Maps integration** with interactive markers
+- Dark/Light mode toggle
 
 ## Technologies Used
 
@@ -18,6 +20,7 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
 - shadcn/ui
 - React Router
 - Lucide React Icons
+- **Google Maps React Wrapper**
 
 ## Getting Started
 
@@ -25,6 +28,17 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
 
 - Node.js (version 18 or higher)
 - npm or yarn
+- **Google Maps API Key** (for map functionality)
+
+### Google Maps Setup
+
+1. **Get API Key**: Visit [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and create a new project
+2. **Enable Maps JavaScript API**: In your project, enable the "Maps JavaScript API"
+3. **Create Credentials**: Create an API key for the Maps JavaScript API
+4. **Environment Setup**: Create a `.env` file in the root directory:
+   ```bash
+   VITE_GOOGLE_MAPS_API_KEY=your_actual_api_key_here
+   ```
 
 ### Installation
 
@@ -41,13 +55,15 @@ cd go-discover-app
 npm install
 ```
 
-3. Start the development server:
+3. Set up your Google Maps API key (see above)
+
+4. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:5173`
 
 ## Available Scripts
 
@@ -61,11 +77,22 @@ npm run dev
 ```
 src/
 ├── components/     # Reusable UI components
+│   ├── ui/        # UI components including GoogleMap
+│   ├── Home/      # Home page components
+│   └── Layout/    # Layout components
 ├── pages/         # Page components
 ├── hooks/         # Custom React hooks
 ├── lib/           # Utility functions
 └── assets/        # Static assets
 ```
+
+## Map Features
+
+- **Interactive Google Maps**: Real-time map with markers
+- **Location Markers**: Clickable markers for nearby places
+- **Responsive Design**: Maps adapt to different screen sizes
+- **Custom Styling**: Clean, modern map appearance
+- **Marker Interactions**: Click handlers for place details
 
 ## Contributing
 

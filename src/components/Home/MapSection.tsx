@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import GoogleMap from "@/components/ui/google-map";
 import {
   MapPin,
   Star,
@@ -22,6 +23,7 @@ const MapSection = () => {
       price: "$$",
       image: "🏖️",
       description: "Fresh seafood with ocean views",
+      position: { lat: 40.7128, lng: -74.006 },
     },
     {
       id: 2,
@@ -32,6 +34,7 @@ const MapSection = () => {
       price: "Free",
       image: "🏖️",
       description: "Crystal clear waters and white sand",
+      position: { lat: 40.7089, lng: -74.009 },
     },
     {
       id: 3,
@@ -42,14 +45,25 @@ const MapSection = () => {
       price: "$$$",
       image: "🏨",
       description: "Luxury accommodation with panoramic views",
+      position: { lat: 40.7168, lng: -74.003 },
     },
   ];
+
+  // Convert places to map markers
+  const mapMarkers = nearbyPlaces.map((place) => ({
+    position: place.position,
+    title: place.name,
+  }));
+
+  const handleMarkerClick = (marker: google.maps.Marker) => {
+    console.log("Marker clicked:", marker.getTitle());
+  };
 
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Map Placeholder */}
+          {/* Map Section */}
           <div className="space-y-6">
             <div className="text-center lg:text-left">
               <h2 className="text-4xl font-bold mb-4">
@@ -66,26 +80,14 @@ const MapSection = () => {
             </div>
 
             {/* Map Container */}
-            <Card className="relative h-96 bg-gradient-sky border-border/40 overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 rounded-full bg-gradient-hero flex items-center justify-center mx-auto animate-pulse">
-                    <MapPin className="h-10 w-10 text-primary-foreground" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold">
-                      Interactive Map Coming Soon
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Google Maps integration with real-time data
-                    </p>
-                    <Button variant="hero" size="sm">
-                      <Navigation className="mr-2 h-4 w-4" />
-                      Enable Location
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            <Card className="relative h-96 border-border/40 overflow-hidden">
+              <GoogleMap
+                center={{ lat: 40.7128, lng: -74.006 }}
+                zoom={14}
+                markers={mapMarkers}
+                onMarkerClick={handleMarkerClick}
+                className="w-full h-full"
+              />
 
               {/* Map Controls */}
               <div className="absolute top-4 right-4 space-y-2">

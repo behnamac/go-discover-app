@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import GoogleMap from "@/components/ui/google-map";
 import {
   MapPin,
   Search,
@@ -33,6 +34,7 @@ const SearchPage = () => {
       rating: 4.5,
       reviews: 2891,
       image: "IMG",
+      position: { lat: 40.7223, lng: -73.9874 },
     },
     {
       id: 2,
@@ -40,6 +42,7 @@ const SearchPage = () => {
       rating: 5,
       reviews: 1456,
       image: "IMG",
+      position: { lat: 40.7308, lng: -73.9973 },
     },
     {
       id: 3,
@@ -47,8 +50,19 @@ const SearchPage = () => {
       rating: 4.5,
       reviews: 987,
       image: "IMG",
+      position: { lat: 40.7099, lng: -73.9626 },
     },
   ];
+
+  // Convert places to map markers
+  const mapMarkers = nearbyPlaces.map((place) => ({
+    position: place.position,
+    title: place.name,
+  }));
+
+  const handleMarkerClick = (marker: google.maps.Marker) => {
+    console.log("Marker clicked:", marker.getTitle());
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,20 +182,14 @@ const SearchPage = () => {
         {/* Right Panel - Map and Nearby Places */}
         <div className="flex-1 relative">
           {/* Interactive Map */}
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-hero flex items-center justify-center mx-auto">
-                <Navigation className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold">
-                  Interactive Google Maps View
-                </h3>
-                <p className="text-muted-foreground">
-                  Map integration coming soon
-                </p>
-              </div>
-            </div>
+          <div className="w-full h-full">
+            <GoogleMap
+              center={{ lat: 40.7128, lng: -74.006 }}
+              zoom={14}
+              markers={mapMarkers}
+              onMarkerClick={handleMarkerClick}
+              className="w-full h-full"
+            />
           </div>
 
           {/* Nearby Restaurants Card */}
