@@ -1,9 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Navigation, Star, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-travel.jpg";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const handleStartExploring = () => {
+    navigate("/search");
+  };
+
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       {/* Background */}
@@ -33,7 +40,12 @@ const HeroSection = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" variant="hero" className="text-lg px-8 py-6">
+              <Button
+                size="lg"
+                variant="hero"
+                className="text-lg px-8 py-6"
+                onClick={handleStartExploring}
+              >
                 <Navigation className="mr-2 h-5 w-5" />
                 Start Exploring
               </Button>
