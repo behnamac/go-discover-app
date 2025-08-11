@@ -22,8 +22,13 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   useEffect(() => {
-    // Update data-theme attribute on document
-    document.documentElement.setAttribute("data-theme", theme);
+    // Update dark class on document element
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
     localStorage.setItem("theme", theme);
   }, [theme]);
 

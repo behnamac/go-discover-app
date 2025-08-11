@@ -114,6 +114,6 @@ export default {
   },
   plugins: [require("tailwindcss-animate"), require("daisyui")],
   daisyui: {
-    themes: ["light", "dark"],
+    themes: false, // Disable DaisyUI themes since we're using custom CSS variables
   },
 } satisfies Config;
