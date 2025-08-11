@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Menu, Bell, User, Sun, Moon } from "lucide-react";
+import { MapPin, Search, Menu, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useNavigate } from "react-router-dom";
 
@@ -55,12 +55,6 @@ const Header = () => {
             )}
           </Button>
 
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <Bell className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <User className="h-5 w-5" />
-          </Button>
           <Button variant="outline" className="hidden md:flex">
             Sign In
           </Button>
