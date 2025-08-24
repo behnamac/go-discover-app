@@ -6,28 +6,28 @@ interface GoogleMapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   className?: string;
+  mapId?: string;
   markers?: Array<{
     position: { lat: number; lng: number };
     title?: string;
     icon?: string;
   }>;
   onMapClick?: (event: google.maps.MapMouseEvent) => void;
-  onMarkerClick?: (marker: google.maps.marker.AdvancedMarkerElement) => void;
+  onMarkerClick?: (marker: any) => void;
 }
 
 const MapComponent = ({
   center = { lat: 40.7128, lng: -74.006 }, // Default to NYC
   zoom = 13,
   className = "",
+  mapId = "DEMO_MAP_ID",
   markers = [],
   onMapClick,
   onMarkerClick,
 }: GoogleMapProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [mapMarkers, setMapMarkers] = useState<
-    google.maps.marker.AdvancedMarkerElement[]
-  >([]);
+  const [mapMarkers, setMapMarkers] = useState<any[]>([]);
 
   useEffect(() => {
     if (ref.current && !map) {
@@ -36,13 +36,17 @@ const MapComponent = ({
         const newMap = new google.maps.Map(ref.current, {
           center,
           zoom,
-          styles: [
-            {
-              featureType: "poi",
-              elementType: "labels",
-              stylers: [{ visibility: "off" }],
-            },
-          ],
+          mapId, // Use the mapId prop
+          // Only add styles if not using a Map ID (Map ID controls styles via cloud console)
+          ...(mapId === "DEMO_MAP_ID" && {
+            styles: [
+              {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }],
+              },
+            ],
+          }),
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
@@ -68,35 +72,79 @@ const MapComponent = ({
 
     try {
       // Clear existing markers
-      mapMarkers.forEach((marker) => (marker.map = null));
-      const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+      mapMarkers.forEach((marker) => {
+        if (marker.map) {
+          marker.map = null;
+        }
+      });
 
-      // Add new markers using AdvancedMarkerElement
+      const newMarkers: any[] = [];
+
+      // Add new markers with fallback support
       markers.forEach(({ position, title, icon }) => {
-        // Create marker content
-        const markerContent = document.createElement("div");
-        markerContent.className = "marker-content";
-        markerContent.innerHTML = `
-          <div style="
-            background: #3b82f6;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            white-space: nowrap;
-          ">
-            ${title || "📍"}
-          </div>
-        `;
+        let marker: any;
 
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          position,
-          map,
-          title,
-          content: markerContent,
-        });
+        // Check if AdvancedMarkerElement is available and properly loaded
+        const isAdvancedMarkerAvailable =
+          google.maps.marker &&
+          google.maps.marker.AdvancedMarkerElement &&
+          typeof google.maps.marker.AdvancedMarkerElement === "function";
+
+        if (isAdvancedMarkerAvailable) {
+          try {
+            // Create marker content for AdvancedMarkerElement
+            const markerContent = document.createElement("div");
+            markerContent.className = "marker-content";
+            markerContent.innerHTML = `
+              <div style="
+                background: #3b82f6;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 500;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                white-space: nowrap;
+              ">
+                ${title || "📍"}
+              </div>
+            `;
+
+            marker = new google.maps.marker.AdvancedMarkerElement({
+              position,
+              map,
+              title,
+              content: markerContent,
+            });
+          } catch (advancedError) {
+            console.warn(
+              "AdvancedMarkerElement failed, falling back to traditional Marker:",
+              advancedError
+            );
+            // Fall through to traditional marker
+          }
+        }
+
+        // Use traditional Marker if AdvancedMarkerElement failed or isn't available
+        if (!marker) {
+          marker = new google.maps.Marker({
+            position,
+            map,
+            title,
+            label: title || "📍",
+            icon: {
+              url:
+                "data:image/svg+xml;charset=UTF-8," +
+                encodeURIComponent(`
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#3b82f6"/>
+                  </svg>
+                `),
+              scaledSize: new google.maps.Size(24, 24),
+              anchor: new google.maps.Point(12, 12),
+            },
+          });
+        }
 
         if (onMarkerClick) {
           marker.addListener("click", () => onMarkerClick(marker));
@@ -178,17 +226,7 @@ const MapFallback = ({ className }: { className?: string }) => (
 const GoogleMap = (props: GoogleMapProps) => {
   // Use Vite's import.meta.env instead of process.env
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-  // Debug logging for production troubleshooting
-  console.log("Environment check:", {
-    hasApiKey: !!apiKey,
-    apiKeyLength: apiKey?.length,
-    apiKeyPrefix: apiKey?.substring(0, 10) + "...",
-    environment: import.meta.env.MODE,
-    allEnvVars: Object.keys(import.meta.env).filter((key) =>
-      key.includes("GOOGLE")
-    ),
-  });
+  const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
 
   // Show fallback if no API key is provided
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
@@ -197,8 +235,8 @@ const GoogleMap = (props: GoogleMapProps) => {
   }
 
   return (
-    <Wrapper apiKey={apiKey} render={render}>
-      <MapComponent {...props} />
+    <Wrapper apiKey={apiKey} render={render} libraries={["marker"]}>
+      <MapComponent {...props} mapId={mapId} />
     </Wrapper>
   );
 };
