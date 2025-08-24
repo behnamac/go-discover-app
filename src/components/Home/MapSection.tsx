@@ -55,8 +55,10 @@ const MapSection = () => {
     title: place.name,
   }));
 
-  const handleMarkerClick = (marker: google.maps.Marker) => {
-    console.log("Marker clicked:", marker.getTitle());
+  const handleMarkerClick = (
+    marker: google.maps.marker.AdvancedMarkerElement
+  ) => {
+    console.log("Marker clicked:", marker.title);
   };
 
   return (

@@ -12,7 +12,7 @@ interface GoogleMapProps {
     icon?: string;
   }>;
   onMapClick?: (event: google.maps.MapMouseEvent) => void;
-  onMarkerClick?: (marker: google.maps.Marker) => void;
+  onMarkerClick?: (marker: google.maps.marker.AdvancedMarkerElement) => void;
 }
 
 const MapComponent = ({
@@ -25,30 +25,39 @@ const MapComponent = ({
 }: GoogleMapProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [mapMarkers, setMapMarkers] = useState<google.maps.Marker[]>([]);
+  const [mapMarkers, setMapMarkers] = useState<
+    google.maps.marker.AdvancedMarkerElement[]
+  >([]);
 
   useEffect(() => {
     if (ref.current && !map) {
-      const newMap = new google.maps.Map(ref.current, {
-        center,
-        zoom,
-        styles: [
-          {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }],
-          },
-        ],
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-      });
+      try {
+        console.log("Creating Google Map...");
+        const newMap = new google.maps.Map(ref.current, {
+          center,
+          zoom,
+          styles: [
+            {
+              featureType: "poi",
+              elementType: "labels",
+              stylers: [{ visibility: "off" }],
+            },
+          ],
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
 
-      setMap(newMap);
+        setMap(newMap);
 
-      // Add click listener
-      if (onMapClick) {
-        newMap.addListener("click", onMapClick);
+        // Add click listener
+        if (onMapClick) {
+          newMap.addListener("click", onMapClick);
+        }
+
+        console.log("Google Map created successfully");
+      } catch (error) {
+        console.error("Error creating Google Map:", error);
       }
     }
   }, [ref, map, center, zoom, onMapClick]);
@@ -57,27 +66,49 @@ const MapComponent = ({
   useEffect(() => {
     if (!map) return;
 
-    // Clear existing markers
-    mapMarkers.forEach((marker) => marker.setMap(null));
-    const newMarkers: google.maps.Marker[] = [];
+    try {
+      // Clear existing markers
+      mapMarkers.forEach((marker) => (marker.map = null));
+      const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
 
-    // Add new markers
-    markers.forEach(({ position, title, icon }) => {
-      const marker = new google.maps.Marker({
-        position,
-        map,
-        title,
-        icon: icon || undefined,
+      // Add new markers using AdvancedMarkerElement
+      markers.forEach(({ position, title, icon }) => {
+        // Create marker content
+        const markerContent = document.createElement("div");
+        markerContent.className = "marker-content";
+        markerContent.innerHTML = `
+          <div style="
+            background: #3b82f6;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            white-space: nowrap;
+          ">
+            ${title || "📍"}
+          </div>
+        `;
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          position,
+          map,
+          title,
+          content: markerContent,
+        });
+
+        if (onMarkerClick) {
+          marker.addListener("click", () => onMarkerClick(marker));
+        }
+
+        newMarkers.push(marker);
       });
 
-      if (onMarkerClick) {
-        marker.addListener("click", () => onMarkerClick(marker));
-      }
-
-      newMarkers.push(marker);
-    });
-
-    setMapMarkers(newMarkers);
+      setMapMarkers(newMarkers);
+    } catch (error) {
+      console.error("Error handling markers:", error);
+    }
   }, [map, markers, onMarkerClick]);
 
   return <div ref={ref} className={className} />;
@@ -104,6 +135,18 @@ const render = (status: Status) => {
               <div className="text-destructive-foreground text-2xl">!</div>
             </div>
             <p className="text-muted-foreground">Failed to load map</p>
+            <p className="text-xs text-muted-foreground">
+              Check your API key and billing setup
+            </p>
+            <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+              <p>Common issues:</p>
+              <ul className="text-left mt-1 space-y-1">
+                <li>• API key restrictions don't include this domain</li>
+                <li>• Maps JavaScript API not enabled</li>
+                <li>• Billing not set up for the project</li>
+                <li>• API key is invalid or expired</li>
+              </ul>
+            </div>
           </div>
         </div>
       );
@@ -136,8 +179,20 @@ const GoogleMap = (props: GoogleMapProps) => {
   // Use Vite's import.meta.env instead of process.env
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
+  // Debug logging for production troubleshooting
+  console.log("Environment check:", {
+    hasApiKey: !!apiKey,
+    apiKeyLength: apiKey?.length,
+    apiKeyPrefix: apiKey?.substring(0, 10) + "...",
+    environment: import.meta.env.MODE,
+    allEnvVars: Object.keys(import.meta.env).filter((key) =>
+      key.includes("GOOGLE")
+    ),
+  });
+
   // Show fallback if no API key is provided
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+    console.warn("Google Maps API key not found or invalid");
     return <MapFallback className={props.className} />;
   }
 
