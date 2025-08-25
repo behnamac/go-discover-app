@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
+import { useLocation } from "@/contexts/LocationContext";
 import {
   MapPin,
   Search,
@@ -16,10 +17,13 @@ import {
   Bed,
   Camera,
   Navigation,
+  Crosshair,
+  Layers,
 } from "lucide-react";
 
 const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("restaurants");
+  const { userLocation, getCurrentLocation, isLoading } = useLocation();
 
   const categories = [
     { id: "restaurants", name: "Restaurants", icon: Utensils },
@@ -60,8 +64,27 @@ const SearchPage = () => {
     title: place.name,
   }));
 
-  const handleMarkerClick = (marker: google.maps.Marker) => {
-    console.log("Marker clicked:", marker.getTitle());
+  // Add user location marker if available
+  const allMarkers = userLocation
+    ? [
+        ...mapMarkers,
+        {
+          position: userLocation,
+          title: "Your Location",
+        },
+      ]
+    : mapMarkers;
+
+  const handleMarkerClick = (marker: any) => {
+    console.log("Marker clicked:", marker.title);
+  };
+
+  const handleCenterOnLocation = () => {
+    if (userLocation) {
+      console.log("Centering on user location:", userLocation);
+    } else {
+      getCurrentLocation();
+    }
   };
 
   return (
@@ -84,7 +107,9 @@ const SearchPage = () => {
             <div className="relative w-full">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="New York, NY, USA"
+                placeholder={
+                  userLocation ? "Search near you..." : "New York, NY, USA"
+                }
                 className="pl-10 bg-background/50 border-border/40 focus:border-primary/40 transition-smooth"
               />
             </div>
@@ -160,21 +185,23 @@ const SearchPage = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>(212) 274-0404</span>
+              <span>(212) 555-0123</span>
             </div>
             <div className="flex items-center space-x-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>97 Sullivan St, New York</span>
+              <span>123 Sushi Street, NYC</span>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex space-x-2">
-            <Button variant="hero" className="flex-1">
-              View Details
+          <div className="space-y-3">
+            <Button className="w-full" size="lg">
+              <Navigation className="mr-2 h-4 w-4" />
+              Get Directions
             </Button>
-            <Button variant="outline" size="icon">
-              <Heart className="h-4 w-4" />
+            <Button variant="outline" className="w-full">
+              <Heart className="mr-2 h-4 w-4" />
+              Save to Favorites
             </Button>
           </div>
         </div>
@@ -184,16 +211,31 @@ const SearchPage = () => {
           {/* Interactive Map */}
           <div className="w-full h-full">
             <GoogleMap
-              center={{ lat: 40.7128, lng: -74.006 }}
-              zoom={14}
-              markers={mapMarkers}
+              center={userLocation || { lat: 40.7128, lng: -74.006 }}
+              zoom={userLocation ? 15 : 14}
+              markers={allMarkers}
               onMarkerClick={handleMarkerClick}
               className="w-full h-full"
             />
           </div>
 
+          {/* Map Controls */}
+          <div className="absolute top-4 right-4 space-y-2">
+            <Button variant="glass" size="icon">
+              <Layers className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="glass"
+              size="icon"
+              onClick={handleCenterOnLocation}
+              disabled={isLoading}
+            >
+              <Crosshair className="h-4 w-4" />
+            </Button>
+          </div>
+
           {/* Nearby Restaurants Card */}
-          <div className="absolute top-4 right-4 w-80">
+          <div className="absolute top-4 left-4 w-80">
             <Card className="bg-background/95 backdrop-blur">
               <CardContent className="p-4">
                 <h3 className="font-semibold mb-3">Nearby Restaurants</h3>
@@ -210,24 +252,12 @@ const SearchPage = () => {
                         <h4 className="font-medium text-sm truncate">
                           {place.name}
                         </h4>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                           <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-3 w-3 ${
-                                  i < Math.floor(place.rating)
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : i < place.rating
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-muted-foreground"
-                                }`}
-                              />
-                            ))}
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                            <span>{place.rating}</span>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            ({place.reviews})
-                          </span>
+                          <span>({place.reviews})</span>
                         </div>
                       </div>
                     </div>
@@ -235,27 +265,6 @@ const SearchPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Category Filter Buttons */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            {categories.map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <Button
-                  key={category.id}
-                  variant={
-                    selectedCategory === category.id ? "hero" : "outline"
-                  }
-                  size="sm"
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="flex items-center space-x-2"
-                >
-                  <IconComponent className="h-4 w-4" />
-                  <span>{category.name}</span>
-                </Button>
-              );
-            })}
           </div>
         </div>
       </div>

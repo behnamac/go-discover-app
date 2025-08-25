@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
+import { useLocation } from "@/contexts/LocationContext";
 import {
   MapPin,
   Star,
@@ -9,10 +10,13 @@ import {
   DollarSign,
   Navigation,
   Layers,
+  Crosshair,
 } from "lucide-react";
 
 const MapSection = () => {
-  // Mock nearby places data
+  const { userLocation, getCurrentLocation, isLoading } = useLocation();
+
+  // Mock nearby places data - in a real app, this would be fetched based on user location
   const nearbyPlaces = [
     {
       id: 1,
@@ -55,8 +59,28 @@ const MapSection = () => {
     title: place.name,
   }));
 
-  const handleMarkerClick = (marker: google.maps.Marker) => {
-    console.log("Marker clicked:", marker.getTitle());
+  // Add user location marker if available
+  const allMarkers = userLocation
+    ? [
+        ...mapMarkers,
+        {
+          position: userLocation,
+          title: "Your Location",
+        },
+      ]
+    : mapMarkers;
+
+  const handleMarkerClick = (marker: any) => {
+    console.log("Marker clicked:", marker.title);
+  };
+
+  const handleCenterOnLocation = () => {
+    if (userLocation) {
+      // This would typically trigger a map center action
+      console.log("Centering on user location:", userLocation);
+    } else {
+      getCurrentLocation();
+    }
   };
 
   return (
@@ -77,14 +101,25 @@ const MapSection = () => {
                 Interactive map with real-time location and nearby
                 recommendations
               </p>
+              {userLocation && (
+                <div className="mt-4 flex items-center justify-center lg:justify-start">
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center space-x-2"
+                  >
+                    <MapPin className="h-3 w-3" />
+                    <span>Location Enabled</span>
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Map Container */}
             <Card className="relative h-96 border-border/40 overflow-hidden">
               <GoogleMap
-                center={{ lat: 40.7128, lng: -74.006 }}
-                zoom={14}
-                markers={mapMarkers}
+                center={userLocation || { lat: 40.7128, lng: -74.006 }}
+                zoom={userLocation ? 15 : 14}
+                markers={allMarkers}
                 onMarkerClick={handleMarkerClick}
                 className="w-full h-full"
               />
@@ -94,8 +129,13 @@ const MapSection = () => {
                 <Button variant="glass" size="icon">
                   <Layers className="h-4 w-4" />
                 </Button>
-                <Button variant="glass" size="icon">
-                  <Navigation className="h-4 w-4" />
+                <Button
+                  variant="glass"
+                  size="icon"
+                  onClick={handleCenterOnLocation}
+                  disabled={isLoading}
+                >
+                  <Crosshair className="h-4 w-4" />
                 </Button>
               </div>
             </Card>
@@ -121,7 +161,9 @@ const MapSection = () => {
             <div>
               <h3 className="text-2xl font-bold mb-2">Nearby Places</h3>
               <p className="text-muted-foreground">
-                Discover what's around you right now
+                {userLocation
+                  ? "Discover what's around you right now"
+                  : "Enable location to see places near you"}
               </p>
             </div>
 
@@ -148,18 +190,17 @@ const MapSection = () => {
                             {place.category}
                           </Badge>
                         </div>
-
                         <div className="flex items-center space-x-4 text-sm">
                           <div className="flex items-center space-x-1">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{place.rating}</span>
+                            <span>{place.rating}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <Clock className="h-4 w-4" />
                             <span>{place.distance}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            <DollarSign className="h-4 w-4" />
                             <span>{place.price}</span>
                           </div>
                         </div>
@@ -169,10 +210,6 @@ const MapSection = () => {
                 </Card>
               ))}
             </div>
-
-            <Button variant="outline" className="w-full">
-              View All Nearby Places
-            </Button>
           </div>
         </div>
       </div>

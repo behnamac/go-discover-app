@@ -6,7 +6,8 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8083,
+    strictPort: true, // This will fail if port 8080 is not available
   },
   plugins: [react()],
   resolve: {

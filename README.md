@@ -18,7 +18,7 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
 - Vite
 - Tailwind CSS
 - shadcn/ui
-- React Router
+- React Router (with v7 future flags enabled)
 - Lucide React Icons
 - **Google Maps React Wrapper**
 
@@ -35,9 +35,15 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
 1. **Get API Key**: Visit [Google Cloud Console](https://console.cloud.google.com/apis/credentials) and create a new project
 2. **Enable Maps JavaScript API**: In your project, enable the "Maps JavaScript API"
 3. **Create Credentials**: Create an API key for the Maps JavaScript API
-4. **Environment Setup**: Create a `.env` file in the root directory:
+4. **Create Map ID** (for Advanced Markers):
+   - Go to [Google Cloud Console Maps Management](https://console.cloud.google.com/google/maps-apis/maps-management)
+   - Click "Create Map ID"
+   - Give it a name (e.g., "go-discover-app-map")
+   - Copy the Map ID (format: `map_id_1234567890abcdef`)
+5. **Environment Setup**: Create a `.env` file in the root directory:
    ```bash
    VITE_GOOGLE_MAPS_API_KEY=your_actual_api_key_here
+   VITE_GOOGLE_MAPS_MAP_ID=your_map_id_here
    ```
 
 ### Installation
