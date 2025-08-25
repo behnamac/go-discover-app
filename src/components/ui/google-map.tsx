@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Wrapper, Status } from "@googlemaps/react-wrapper";
 import { MapPin } from "lucide-react";
+import { gsap } from "gsap";
+import { scaleIn, pulse } from "@/lib/animations";
 
 interface GoogleMapProps {
   center?: { lat: number; lng: number };
@@ -59,12 +61,24 @@ const MapComponent = ({
           newMap.addListener("click", onMapClick);
         }
 
+        // Animate map entrance
+        gsap.fromTo(
+          ref.current,
+          { opacity: 0, scale: 0.95 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            ease: "power2.out",
+          }
+        );
+
         console.log("Google Map created successfully");
       } catch (error) {
         console.error("Error creating Google Map:", error);
       }
     }
-  }, [ref, map, center, zoom, onMapClick]);
+  }, [ref, map, center, zoom, onMapClick, mapId]);
 
   // Handle markers
   useEffect(() => {
@@ -81,7 +95,7 @@ const MapComponent = ({
       const newMarkers: any[] = [];
 
       // Add new markers with fallback support
-      markers.forEach(({ position, title, icon }) => {
+      markers.forEach(({ position, title, icon }, index) => {
         let marker: any;
 
         // Check if AdvancedMarkerElement is available and properly loaded
@@ -116,6 +130,21 @@ const MapComponent = ({
               title,
               content: markerContent,
             });
+
+            // Animate marker entrance
+            setTimeout(() => {
+              gsap.fromTo(
+                markerContent,
+                { scale: 0, opacity: 0 },
+                {
+                  scale: 1,
+                  opacity: 1,
+                  duration: 0.5,
+                  ease: "back.out(1.7)",
+                  delay: index * 0.1,
+                }
+              );
+            }, 100);
           } catch (advancedError) {
             console.warn(
               "AdvancedMarkerElement failed, falling back to traditional Marker:",
@@ -144,10 +173,35 @@ const MapComponent = ({
               anchor: new google.maps.Point(12, 12),
             },
           });
+
+          // Animate traditional marker entrance
+          setTimeout(() => {
+            gsap.fromTo(
+              marker,
+              { scale: 0, opacity: 0 },
+              {
+                scale: 1,
+                opacity: 1,
+                duration: 0.5,
+                ease: "back.out(1.7)",
+                delay: index * 0.1,
+              }
+            );
+          }, 100);
         }
 
         if (onMarkerClick) {
-          marker.addListener("click", () => onMarkerClick(marker));
+          marker.addListener("click", () => {
+            // Add click animation
+            gsap.to(marker, {
+              scale: 1.2,
+              duration: 0.1,
+              ease: "power2.out",
+              yoyo: true,
+              repeat: 1,
+            });
+            onMarkerClick(marker);
+          });
         }
 
         newMarkers.push(marker);

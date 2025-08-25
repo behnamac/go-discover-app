@@ -1,10 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
 import { useLocation } from "@/contexts/LocationContext";
+import { gsap } from "gsap";
+import {
+  fadeIn,
+  slideInLeft,
+  slideInRight,
+  staggerFadeIn,
+  cardHover,
+  buttonClick,
+  scaleIn,
+  pageTransition,
+} from "@/lib/animations";
 import {
   MapPin,
   Search,
@@ -24,6 +35,7 @@ import {
 const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("restaurants");
   const { userLocation, getCurrentLocation, isLoading } = useLocation();
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const categories = [
     { id: "restaurants", name: "Restaurants", icon: Utensils },
@@ -80,6 +92,7 @@ const SearchPage = () => {
   };
 
   const handleCenterOnLocation = () => {
+    buttonClick(".center-location-btn");
     if (userLocation) {
       console.log("Centering on user location:", userLocation);
     } else {
@@ -87,10 +100,32 @@ const SearchPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (pageRef.current) {
+      // Page entrance animation
+      pageTransition(pageRef.current);
+
+      // Stagger animations for page content
+      const tl = gsap.timeline({ delay: 0.2 });
+
+      tl.add(() => {
+        fadeIn(".search-header", 0);
+        slideInLeft(".search-left-panel", 0.2);
+        slideInRight(".search-right-panel", 0.4);
+        staggerFadeIn(".nearby-restaurant", 0.6);
+        scaleIn(".map-controls", 0.8);
+      });
+
+      // Card hover animations
+      cardHover(".nearby-restaurant");
+      cardHover(".search-card");
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={pageRef} className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="search-header sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
           <div className="flex items-center space-x-2">
@@ -125,9 +160,9 @@ const SearchPage = () => {
       {/* Main Content */}
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Left Panel - Place Details */}
-        <div className="w-1/3 border-r border-border/40 p-6 overflow-y-auto">
+        <div className="search-left-panel w-1/3 border-r border-border/40 p-6 overflow-y-auto">
           {/* Image Placeholder */}
-          <div className="w-full h-48 bg-muted rounded-lg flex items-center justify-center mb-6">
+          <div className="search-card w-full h-48 bg-muted rounded-lg flex items-center justify-center mb-6">
             <span className="text-muted-foreground">
               Sushi Restaurant Interior
             </span>
@@ -207,7 +242,7 @@ const SearchPage = () => {
         </div>
 
         {/* Right Panel - Map and Nearby Places */}
-        <div className="flex-1 relative">
+        <div className="search-right-panel flex-1 relative">
           {/* Interactive Map */}
           <div className="w-full h-full">
             <GoogleMap
@@ -220,13 +255,14 @@ const SearchPage = () => {
           </div>
 
           {/* Map Controls */}
-          <div className="absolute top-4 right-4 space-y-2">
+          <div className="map-controls absolute top-4 right-4 space-y-2">
             <Button variant="glass" size="icon">
               <Layers className="h-4 w-4" />
             </Button>
             <Button
               variant="glass"
               size="icon"
+              className="center-location-btn"
               onClick={handleCenterOnLocation}
               disabled={isLoading}
             >
@@ -243,7 +279,7 @@ const SearchPage = () => {
                   {nearbyPlaces.map((place) => (
                     <div
                       key={place.id}
-                      className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                      className="nearby-restaurant flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                     >
                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
                         {place.image}

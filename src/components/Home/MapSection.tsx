@@ -3,6 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
 import { useLocation } from "@/contexts/LocationContext";
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import {
+  slideInLeft,
+  slideInRight,
+  staggerFadeIn,
+  cardHover,
+  buttonClick,
+  scaleIn,
+  pulse,
+} from "@/lib/animations";
 import {
   MapPin,
   Star,
@@ -15,6 +26,7 @@ import {
 
 const MapSection = () => {
   const { userLocation, getCurrentLocation, isLoading } = useLocation();
+  const sectionRef = useRef<HTMLElement>(null);
 
   // Mock nearby places data - in a real app, this would be fetched based on user location
   const nearbyPlaces = [
@@ -75,6 +87,7 @@ const MapSection = () => {
   };
 
   const handleCenterOnLocation = () => {
+    buttonClick(".center-location-btn");
     if (userLocation) {
       // This would typically trigger a map center action
       console.log("Centering on user location:", userLocation);
@@ -83,12 +96,44 @@ const MapSection = () => {
     }
   };
 
+  useEffect(() => {
+    if (sectionRef.current) {
+      // Scroll-triggered animations
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          end: "bottom 20%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      tl.add(() => {
+        // Map section content animations
+        slideInLeft(".map-content", 0);
+        slideInRight(".map-container", 0.2);
+        staggerFadeIn(".nearby-place", 0.4);
+      });
+
+      // Card hover animations
+      cardHover(".nearby-place");
+
+      // Pulse animation for location badge
+      if (userLocation) {
+        pulse(".location-badge");
+      }
+
+      // Map controls animations
+      scaleIn(".map-controls", 0.6);
+    }
+  }, [userLocation]);
+
   return (
-    <section className="py-20 bg-background">
+    <section ref={sectionRef} className="map-section py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Map Section */}
-          <div className="space-y-6">
+          <div className="map-content space-y-6">
             <div className="text-center lg:text-left">
               <h2 className="text-4xl font-bold mb-4">
                 Explore Your
@@ -105,7 +150,7 @@ const MapSection = () => {
                 <div className="mt-4 flex items-center justify-center lg:justify-start">
                   <Badge
                     variant="secondary"
-                    className="flex items-center space-x-2"
+                    className="location-badge flex items-center space-x-2"
                   >
                     <MapPin className="h-3 w-3" />
                     <span>Location Enabled</span>
@@ -115,7 +160,7 @@ const MapSection = () => {
             </div>
 
             {/* Map Container */}
-            <Card className="relative h-96 border-border/40 overflow-hidden">
+            <Card className="map-container relative h-96 border-border/40 overflow-hidden">
               <GoogleMap
                 center={userLocation || { lat: 40.7128, lng: -74.006 }}
                 zoom={userLocation ? 15 : 14}
@@ -125,13 +170,14 @@ const MapSection = () => {
               />
 
               {/* Map Controls */}
-              <div className="absolute top-4 right-4 space-y-2">
+              <div className="map-controls absolute top-4 right-4 space-y-2">
                 <Button variant="glass" size="icon">
                   <Layers className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="glass"
                   size="icon"
+                  className="center-location-btn"
                   onClick={handleCenterOnLocation}
                   disabled={isLoading}
                 >
@@ -171,7 +217,7 @@ const MapSection = () => {
               {nearbyPlaces.map((place) => (
                 <Card
                   key={place.id}
-                  className="hover:shadow-card transition-smooth cursor-pointer border-border/40"
+                  className="nearby-place hover:shadow-card transition-smooth cursor-pointer border-border/40"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-4">
