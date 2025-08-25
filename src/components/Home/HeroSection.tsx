@@ -1,14 +1,36 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MapPin, Navigation, Star, Users } from "lucide-react";
+import { MapPin, Navigation, Star, Users, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "@/contexts/LocationContext";
+import { useToast } from "@/hooks/use-toast";
 import heroImage from "@/assets/hero-travel.jpg";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { getCurrentLocation, isLoading, userLocation, error } = useLocation();
+  const { toast } = useToast();
 
   const handleStartExploring = () => {
     navigate("/search");
+  };
+
+  const handleEnableLocation = async () => {
+    try {
+      await getCurrentLocation();
+      if (userLocation) {
+        toast({
+          title: "Location Enabled!",
+          description: "Your location has been set. Explore nearby places!",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Location Error",
+        description: error || "Failed to get your location. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -49,9 +71,23 @@ const HeroSection = () => {
                 <Navigation className="mr-2 h-5 w-5" />
                 Start Exploring
               </Button>
-              <Button size="lg" variant="glass" className="text-lg px-8 py-6">
-                <MapPin className="mr-2 h-5 w-5" />
-                Enable Location
+              <Button
+                size="lg"
+                variant="glass"
+                className="text-lg px-8 py-6"
+                onClick={handleEnableLocation}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <MapPin className="mr-2 h-5 w-5" />
+                )}
+                {isLoading
+                  ? "Getting Location..."
+                  : userLocation
+                  ? "Location Enabled"
+                  : "Enable Location"}
               </Button>
             </div>
 
