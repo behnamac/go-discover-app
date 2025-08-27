@@ -60,6 +60,15 @@ const SearchPage = () => {
     maxPrice: 4,
   });
 
+  console.log(
+    "🍕 SearchPage rendering with",
+    restaurants.length,
+    "restaurants"
+  );
+  if (restaurants.length > 0) {
+    console.log("🍕 First restaurant in render:", restaurants[0]?.name);
+  }
+
   const categories = [
     { id: "restaurants", name: "Restaurants", icon: Utensils },
     { id: "hotels", name: "Hotels", icon: Bed },
@@ -331,6 +340,18 @@ const SearchPage = () => {
             >
               🔄
             </Button>
+            <Button
+              variant="glass"
+              size="icon"
+              onClick={() => {
+                const newCenter = { lat: 51.5074, lng: -0.1278 }; // London
+                console.log("🗺️ Manually setting center to London:", newCenter);
+                updateMapView(newCenter, 15);
+              }}
+              title="Test London"
+            >
+              🇬🇧
+            </Button>
           </div>
 
           {/* Loading indicator */}
@@ -351,7 +372,7 @@ const SearchPage = () => {
                   Nearby Restaurants
                   {restaurants.length > 0 && (
                     <span className="text-sm text-muted-foreground ml-2">
-                      ({restaurants.length})
+                      ({restaurants.length}) - {restaurants[0]?.name}
                     </span>
                   )}
                 </h3>

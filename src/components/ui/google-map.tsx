@@ -77,6 +77,7 @@ const MapComponent = ({
 
         // Add center change listener
         if (onCenterChanged) {
+          console.log("🗺️ Setting up center_changed listener");
           newMap.addListener("center_changed", () => {
             const currentCenter = newMap.getCenter();
             if (currentCenter) {
@@ -85,6 +86,17 @@ const MapComponent = ({
                 lng: currentCenter.lng(),
               });
               onCenterChanged({
+                lat: currentCenter.lat(),
+                lng: currentCenter.lng(),
+              });
+            }
+          });
+
+          // Also add idle listener as backup
+          newMap.addListener("idle", () => {
+            const currentCenter = newMap.getCenter();
+            if (currentCenter) {
+              console.log("🗺️ Google Map idle - center:", {
                 lat: currentCenter.lat(),
                 lng: currentCenter.lng(),
               });

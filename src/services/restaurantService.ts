@@ -212,10 +212,15 @@ class RestaurantService {
         "Sample restaurant image:",
         data.data[0]?.photo?.images?.medium?.url
       );
+      console.log(
+        "🍕 First 3 restaurants from API:",
+        data.data.slice(0, 3).map((r) => r.name)
+      );
 
-      return data.data
+      const finalRestaurants = data.data
         .filter((place: any) => place.rating >= minRating)
         .map((place: any, index: number) => {
+          console.log(`🍕 Processing restaurant ${index}: ${place.name}`);
           // Validate coordinates
           const coords = this.validateCoordinates(
             place.latitude,
@@ -250,6 +255,12 @@ class RestaurantService {
           };
         })
         .filter((restaurant) => restaurant !== null);
+
+      console.log(
+        "🍕 Final processed restaurants:",
+        finalRestaurants.map((r) => r.name)
+      );
+      return finalRestaurants;
     } catch (error) {
       console.error("❌ Error fetching restaurants from RapidAPI:", error);
       console.log(

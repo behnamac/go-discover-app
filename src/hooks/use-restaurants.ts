@@ -40,7 +40,23 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
         setError(null);
 
         const results = await restaurantService.searchNearbyRestaurants(params);
-        setRestaurants(results);
+        console.log(
+          "🍕 Setting restaurants in state:",
+          results.length,
+          "restaurants"
+        );
+        console.log(
+          "🍕 First restaurant:",
+          results[0]?.name,
+          "at",
+          results[0]?.position
+        );
+        console.log(
+          "🍕 About to set restaurants in state. Current count:",
+          restaurants.length
+        );
+        setRestaurants([...results]); // Force new array reference
+        console.log("🍕 Restaurants state updated");
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch restaurants"
@@ -52,6 +68,18 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
     }, 300), // Reduced from 500ms to 300ms
     []
   );
+
+  // Monitor restaurants state changes
+  useEffect(() => {
+    console.log(
+      "🍕 Restaurants state changed:",
+      restaurants.length,
+      "restaurants"
+    );
+    if (restaurants.length > 0) {
+      console.log("🍕 First restaurant in state:", restaurants[0]?.name);
+    }
+  }, [restaurants]);
 
   // Search restaurants when map center or zoom changes
   useEffect(() => {
