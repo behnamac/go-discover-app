@@ -34,6 +34,7 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
   // Debounced search function
   const debouncedSearch = useCallback(
     debounce(async (params: RestaurantSearchParams) => {
+      console.log("🍕 Executing restaurant search for:", params.location);
       try {
         setIsLoading(true);
         setError(null);
@@ -48,13 +49,20 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
       } finally {
         setIsLoading(false);
       }
-    }, 500),
+    }, 300), // Reduced from 500ms to 300ms
     []
   );
 
   // Search restaurants when map center or zoom changes
   useEffect(() => {
     if (!mapCenter) return;
+
+    console.log(
+      "🔍 Searching restaurants for location:",
+      mapCenter,
+      "zoom:",
+      currentZoom
+    );
 
     // Only search if zoom level is sufficient
     if (currentZoom >= minZoomLevel) {

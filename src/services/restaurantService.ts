@@ -180,6 +180,8 @@ class RestaurantService {
       url.searchParams.append("open_now", "false");
       url.searchParams.append("lunit", "km");
       url.searchParams.append("lang", "en_US");
+      url.searchParams.append("min_rating", "0");
+      url.searchParams.append("max_rating", "5");
 
       const response = await fetch(url.toString(), {
         method: "GET",
@@ -203,6 +205,8 @@ class RestaurantService {
       }
 
       console.log(`Found ${data.data.length} restaurants from RapidAPI`);
+      console.log("Search location:", location);
+      console.log("API URL:", url.toString());
       console.log("Sample restaurant data:", data.data[0]);
       console.log(
         "Sample restaurant image:",

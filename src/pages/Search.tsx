@@ -104,6 +104,7 @@ const SearchPage = () => {
   };
 
   const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
+    console.log("🗺️ Map center changed to:", center);
     updateMapView(center, currentZoom);
   };
 
@@ -117,6 +118,13 @@ const SearchPage = () => {
       await refreshRestaurants();
     }
   };
+
+  // Initialize map center when component loads
+  useEffect(() => {
+    const initialCenter = userLocation || { lat: 40.7128, lng: -74.006 };
+    console.log("🗺️ Initializing map center:", initialCenter);
+    updateMapView(initialCenter, userLocation ? 15 : 14);
+  }, [userLocation, updateMapView]);
 
   useEffect(() => {
     if (pageRef.current) {
@@ -311,6 +319,17 @@ const SearchPage = () => {
               title="Test APIs"
             >
               🔧
+            </Button>
+            <Button
+              variant="glass"
+              size="icon"
+              onClick={() => {
+                console.log("🔍 Current map center:", mapCenter);
+                refreshRestaurants();
+              }}
+              title="Refresh Restaurants"
+            >
+              🔄
             </Button>
           </div>
 

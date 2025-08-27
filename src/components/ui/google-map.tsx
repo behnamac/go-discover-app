@@ -80,6 +80,10 @@ const MapComponent = ({
           newMap.addListener("center_changed", () => {
             const currentCenter = newMap.getCenter();
             if (currentCenter) {
+              console.log("🗺️ Google Map center changed:", {
+                lat: currentCenter.lat(),
+                lng: currentCenter.lng(),
+              });
               onCenterChanged({
                 lat: currentCenter.lat(),
                 lng: currentCenter.lng(),
