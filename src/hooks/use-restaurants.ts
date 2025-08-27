@@ -31,10 +31,11 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
     lng: number;
   } | null>(null);
 
-  // Debounced search function
-  const debouncedSearch = useCallback(
-    debounce(async (params: RestaurantSearchParams) => {
+  // Direct search function (no debounce for testing)
+  const directSearch = useCallback(
+    async (params: RestaurantSearchParams) => {
       console.log("🍕 Executing restaurant search for:", params.location);
+      console.log("🍕 Search params:", params);
       try {
         setIsLoading(true);
         setError(null);
@@ -65,8 +66,16 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
       } finally {
         setIsLoading(false);
       }
-    }, 300), // Reduced from 500ms to 300ms
-    []
+    },
+    [restaurants.length]
+  );
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce(async (params: RestaurantSearchParams) => {
+      await directSearch(params);
+    }, 300),
+    [directSearch]
   );
 
   // Monitor restaurants state changes
@@ -101,7 +110,8 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
         maxPrice,
       };
 
-      debouncedSearch(searchParams);
+      console.log("🍕 About to call directSearch with:", searchParams);
+      directSearch(searchParams);
     } else {
       // Clear restaurants if zoom is too low
       setRestaurants([]);
@@ -119,8 +129,13 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
   // Update map center and zoom
   const updateMapView = useCallback(
     (center: { lat: number; lng: number }, zoom: number) => {
-      setMapCenter(center);
+      console.log("🗺️ updateMapView called with:", center, "zoom:", zoom);
+
+      // Force immediate state update
+      setMapCenter({ ...center });
       setCurrentZoom(zoom);
+
+      console.log("🗺️ State update triggered for:", center);
     },
     []
   );
