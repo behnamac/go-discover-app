@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
 import { useLocation } from "@/contexts/LocationContext";
 import { useRestaurants } from "@/hooks/use-restaurants";
+import { restaurantService } from "@/services/restaurantService";
 import { gsap } from "gsap";
 import {
   fadeIn,
@@ -104,6 +105,17 @@ const SearchPage = () => {
 
   const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
     updateMapView(center, currentZoom);
+  };
+
+  const handleTestAPIs = async () => {
+    console.log("🧪 Testing API connectivity...");
+    const results = await restaurantService.testAPIConnectivity();
+    console.log("API Test Results:", results);
+
+    if (results.rapidapi || results.google) {
+      // Refresh restaurants to try real API data
+      await refreshRestaurants();
+    }
   };
 
   useEffect(() => {
@@ -291,6 +303,14 @@ const SearchPage = () => {
               disabled={locationLoading}
             >
               <Crosshair className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="glass"
+              size="icon"
+              onClick={handleTestAPIs}
+              title="Test APIs"
+            >
+              🔧
             </Button>
           </div>
 

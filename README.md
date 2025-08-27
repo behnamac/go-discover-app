@@ -48,6 +48,32 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
 
 **Note**: The app will work with just Google Places API. RapidAPI is optional for additional data sources.
 
+### Restaurant Data Setup (Optional)
+
+To get real restaurant data instead of mock data, you can set up additional API keys:
+
+#### Option 1: Google Places API (Recommended)
+
+The app already uses Google Places API as a fallback. Just make sure your Google Maps API key has the "Places API" enabled in the Google Cloud Console.
+
+#### Option 2: RapidAPI Travel Advisor (Additional)
+
+1. **Get RapidAPI Key**: Visit [RapidAPI](https://rapidapi.com/) and sign up
+2. **Subscribe to Travel Advisor**: Search for "Travel Advisor" and subscribe to the free tier
+3. **Get API Key**: Copy your RapidAPI key from your dashboard
+4. **Add to Environment**: Add to your `.env` file:
+   ```bash
+   VITE_RAPIDAPI_KEY=your_rapidapi_key_here
+   ```
+
+**Complete .env file example:**
+
+```bash
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+VITE_GOOGLE_MAPS_MAP_ID=your_map_id_here
+VITE_RAPIDAPI_KEY=your_rapidapi_key_here
+```
+
 ### Installation
 
 1. Clone the repository:

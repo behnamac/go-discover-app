@@ -36,6 +36,32 @@ class RestaurantService {
     // You'll need to get your RapidAPI key from https://rapidapi.com/
     this.apiKey = import.meta.env.VITE_RAPIDAPI_KEY || "";
     this.baseUrl = "https://places.googleapis.com/v1/places:searchNearby";
+
+    // Debug API key status
+    if (!this.apiKey) {
+      console.warn(
+        "⚠️ RapidAPI key not found! Set VITE_RAPIDAPI_KEY in your .env file"
+      );
+    } else {
+      console.log("✅ RapidAPI key found");
+    }
+
+    if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+      console.warn(
+        "⚠️ Google Maps API key not found! Set VITE_GOOGLE_MAPS_API_KEY in your .env file"
+      );
+    } else {
+      console.log("✅ Google Maps API key found");
+    }
+
+    // Test API connectivity on initialization
+    setTimeout(() => {
+      this.testAPIConnectivity().then((results) => {
+        if (!results.rapidapi && !results.google) {
+          console.warn("⚠️ Both APIs failed. Using mock data only.");
+        }
+      });
+    }, 1000);
   }
 
   // Search for restaurants at any location on the map (not just user's location)
@@ -129,7 +155,7 @@ class RestaurantService {
     }
   }
 
-  // Using RapidAPI Travel Advisor v2 endpoints (more reliable)
+  // Using RapidAPI Travel Advisor for restaurant data
   async searchNearbyRestaurantsRapidAPI(
     params: RestaurantSearchParams
   ): Promise<Restaurant[]> {
@@ -142,120 +168,139 @@ class RestaurantService {
     } = params;
 
     try {
-      // First, get restaurant filters to understand available options
-      const filtersResponse = await fetch(
-        "https://travel-advisor.p.rapidapi.com/restaurant-filters/v2/list",
-        {
-          method: "POST",
-          headers: {
-            "X-RapidAPI-Key": this.apiKey,
-            "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            geoId: 1, // Default geo ID, will be overridden by coordinates
-            date: new Date().toISOString().split("T")[0],
-            partySize: 2,
-            sort: "RELEVANCE",
-            sortId: "relevance",
-            filters: [],
-            updateToken: "",
-          }),
-        }
+      // Use the list-by-latlng endpoint with URL parameters
+      const url = new URL(
+        "https://travel-advisor.p.rapidapi.com/restaurants/list-by-latlng"
       );
+      url.searchParams.append("latitude", location.lat.toString());
+      url.searchParams.append("longitude", location.lng.toString());
+      url.searchParams.append("limit", "20");
+      url.searchParams.append("currency", "USD");
+      url.searchParams.append("distance", (radius / 1000).toString());
+      url.searchParams.append("open_now", "false");
+      url.searchParams.append("lunit", "km");
+      url.searchParams.append("lang", "en_US");
 
-      if (!filtersResponse.ok) {
-        throw new Error(`Filters API error! status: ${filtersResponse.status}`);
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": this.apiKey,
+          "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`RapidAPI error! status: ${response.status}`);
       }
 
-      // Now get restaurants using the v2 list endpoint
-      const restaurantsResponse = await fetch(
-        "https://travel-advisor.p.rapidapi.com/restaurants/v2/list",
-        {
-          method: "POST",
-          headers: {
-            "X-RapidAPI-Key": this.apiKey,
-            "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            geoId: 1, // This will be overridden by coordinates
-            date: new Date().toISOString().split("T")[0],
-            partySize: 2,
-            sort: "RELEVANCE",
-            sortId: "relevance",
-            filters: [],
-            updateToken: "",
-            // Add location-based parameters
-            latitude: location.lat,
-            longitude: location.lng,
-            radius: radius / 1000, // Convert to km
-            limit: 20,
-          }),
-        }
-      );
-
-      if (!restaurantsResponse.ok) {
-        throw new Error(
-          `Restaurants API error! status: ${restaurantsResponse.status}`
-        );
-      }
-
-      const data = await restaurantsResponse.json();
+      const data = await response.json();
+      console.log("RapidAPI response:", data);
 
       if (!data.data || !Array.isArray(data.data)) {
         console.warn("No restaurant data returned from RapidAPI");
+        console.log("Response structure:", Object.keys(data));
         return this.getMockRestaurants(location);
       }
 
+      console.log(`Found ${data.data.length} restaurants from RapidAPI`);
+      console.log("Sample restaurant data:", data.data[0]);
+
       return data.data
         .filter((place: any) => place.rating >= minRating)
-        .map((place: any, index: number) => ({
-          id: place.locationId || place.location_id || `restaurant-${index}`,
-          name: place.name || "Restaurant",
-          rating: place.rating || 0,
-          reviews: place.numReviews || place.num_reviews || 0,
-          price:
-            this.getPriceLevelFromString(
-              place.priceLevel || place.price_level
-            ) || "$$",
-          category: place.cuisine?.[0]?.name || place.category || "Restaurant",
-          image:
-            place.photo?.images?.medium?.url ||
-            place.photo?.images?.small?.url ||
-            this.getRandomRestaurantImage(),
-          description:
-            place.description ||
-            place.shortDescription ||
-            this.generateDescription([type]),
-          position: {
-            lat: place.latitude || place.lat || location.lat,
-            lng: place.longitude || place.lng || location.lng,
-          },
-          distance: this.calculateDistance(location, {
-            lat: place.latitude || place.lat || location.lat,
-            lng: place.longitude || place.lng || location.lng,
-          }),
-          address:
-            place.addressString ||
-            place.address_string ||
-            place.address ||
-            "Address not available",
-          phone: place.phone || place.phoneNumber || "Phone not available",
-          website: place.website || place.url || "Website not available",
-          hours:
-            place.openNowText ||
-            place.open_now_text ||
-            place.hours ||
-            "Hours not available",
-        }));
+        .map((place: any, index: number) => {
+          // Validate coordinates
+          const coords = this.validateCoordinates(
+            place.latitude,
+            place.longitude
+          );
+          if (!coords) {
+            console.warn(
+              `Invalid coordinates for restaurant ${place.name}: ${place.latitude}, ${place.longitude}`
+            );
+            return null;
+          }
+
+          return {
+            id: place.location_id || `restaurant-${index}`,
+            name: place.name || "Restaurant",
+            rating: place.rating || 0,
+            reviews: place.num_reviews || 0,
+            price: place.price_level || "$$",
+            category: place.cuisine?.[0]?.name || "Restaurant",
+            image:
+              place.photo?.images?.medium?.url ||
+              this.getRandomRestaurantImage(),
+            description: place.description || this.generateDescription([type]),
+            position: coords,
+            distance: this.calculateDistance(location, coords),
+            address: place.address_string || "Address not available",
+            phone: place.phone || "Phone not available",
+            website: place.website || "Website not available",
+            hours: place.open_now_text || "Hours not available",
+          };
+        })
+        .filter((restaurant) => restaurant !== null);
     } catch (error) {
-      console.error("Error fetching restaurants from RapidAPI:", error);
+      console.error("❌ Error fetching restaurants from RapidAPI:", error);
       console.log(
-        "Using mock data due to RapidAPI error. Check your RapidAPI key and subscription."
+        "🔄 Using mock data due to RapidAPI error. Check your RapidAPI key and subscription."
       );
+
+      if (error instanceof Error) {
+        console.log("Error details:", error.message);
+      }
+
       return this.getMockRestaurants(location);
     }
+  }
+
+  // Test API connectivity
+  async testAPIConnectivity(): Promise<{ rapidapi: boolean; google: boolean }> {
+    const results = { rapidapi: false, google: false };
+
+    // Test RapidAPI with actual restaurant search
+    try {
+      const url = new URL(
+        "https://travel-advisor.p.rapidapi.com/restaurants/list-by-latlng"
+      );
+      url.searchParams.append("latitude", "40.7128");
+      url.searchParams.append("longitude", "-74.006");
+      url.searchParams.append("limit", "5");
+      url.searchParams.append("currency", "USD");
+      url.searchParams.append("distance", "1");
+      url.searchParams.append("open_now", "false");
+      url.searchParams.append("lunit", "km");
+      url.searchParams.append("lang", "en_US");
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "X-RapidAPI-Key": this.apiKey,
+          "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+          results.rapidapi = true;
+          console.log("✅ RapidAPI connection successful - Found restaurants");
+        } else {
+          console.log("⚠️ RapidAPI connected but no restaurant data returned");
+        }
+      } else {
+        console.log(
+          `❌ RapidAPI connection failed: ${response.status} ${response.statusText}`
+        );
+      }
+    } catch (error) {
+      console.log("❌ RapidAPI connection error:", error);
+    }
+
+    // Note: Google Places API cannot be tested from browser due to CORS
+    console.log("ℹ️ Google Places API testing skipped (CORS restriction)");
+
+    return results;
   }
 
   // Get detailed information about a specific restaurant
@@ -311,8 +356,8 @@ class RestaurantService {
           place.shortDescription ||
           this.generateDescription(["restaurant"]),
         position: {
-          lat: place.latitude || place.lat || 0,
-          lng: place.longitude || place.lng || 0,
+          lat: parseFloat(place.latitude || place.lat) || 0,
+          lng: parseFloat(place.longitude || place.lng) || 0,
         },
         distance: "0 km", // Will be calculated when we have the reference location
         address:
@@ -426,6 +471,25 @@ class RestaurantService {
 
   private toRadians(degrees: number): number {
     return degrees * (Math.PI / 180);
+  }
+
+  private validateCoordinates(
+    lat: any,
+    lng: any
+  ): { lat: number; lng: number } | null {
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+
+    // Check if coordinates are valid numbers and within valid ranges
+    if (isNaN(latNum) || isNaN(lngNum)) {
+      return null;
+    }
+
+    if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+      return null;
+    }
+
+    return { lat: latNum, lng: lngNum };
   }
 
   private getMockRestaurants(location: Location): Restaurant[] {
