@@ -242,7 +242,25 @@ const MapSection = () => {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start space-x-4">
-                        <div className="text-4xl">{restaurant.image}</div>
+                        <div className="w-16 h-16 bg-muted rounded flex items-center justify-center text-2xl overflow-hidden">
+                          {restaurant.image.startsWith("http") ? (
+                            <img
+                              src={restaurant.image}
+                              alt={restaurant.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget as HTMLElement;
+                                target.style.display = "none";
+                                const fallback =
+                                  target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+                          <div className="w-full h-full flex items-center justify-center text-2xl">
+                            {restaurant.image}
+                          </div>
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-2">
                             <div>

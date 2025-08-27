@@ -204,6 +204,10 @@ class RestaurantService {
 
       console.log(`Found ${data.data.length} restaurants from RapidAPI`);
       console.log("Sample restaurant data:", data.data[0]);
+      console.log(
+        "Sample restaurant image:",
+        data.data[0]?.photo?.images?.medium?.url
+      );
 
       return data.data
         .filter((place: any) => place.rating >= minRating)
@@ -227,10 +231,11 @@ class RestaurantService {
             reviews: place.num_reviews || 0,
             price: place.price_level || "$$",
             category: place.cuisine?.[0]?.name || "Restaurant",
-            image: place.photo?.images?.medium?.url || 
-                   place.photo?.images?.small?.url || 
-                   place.photo?.images?.large?.url ||
-                   this.getRandomRestaurantImage(),
+            image:
+              place.photo?.images?.medium?.url ||
+              place.photo?.images?.small?.url ||
+              place.photo?.images?.large?.url ||
+              this.getRandomRestaurantImage(),
             description: place.description || this.generateDescription([type]),
             position: coords,
             distance: this.calculateDistance(location, coords),
