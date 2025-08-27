@@ -227,9 +227,10 @@ class RestaurantService {
             reviews: place.num_reviews || 0,
             price: place.price_level || "$$",
             category: place.cuisine?.[0]?.name || "Restaurant",
-            image:
-              place.photo?.images?.medium?.url ||
-              this.getRandomRestaurantImage(),
+            image: place.photo?.images?.medium?.url || 
+                   place.photo?.images?.small?.url || 
+                   place.photo?.images?.large?.url ||
+                   this.getRandomRestaurantImage(),
             description: place.description || this.generateDescription([type]),
             position: coords,
             distance: this.calculateDistance(location, coords),
