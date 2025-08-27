@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
 import { useLocation } from "@/contexts/LocationContext";
+import { useRestaurants } from "@/hooks/use-restaurants";
 import { gsap } from "gsap";
 import {
   fadeIn,
@@ -30,12 +31,32 @@ import {
   Navigation,
   Crosshair,
   Layers,
+  Loader2,
 } from "lucide-react";
 
 const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("restaurants");
-  const { userLocation, getCurrentLocation, isLoading } = useLocation();
+  const {
+    userLocation,
+    getCurrentLocation,
+    isLoading: locationLoading,
+  } = useLocation();
   const pageRef = useRef<HTMLDivElement>(null);
+
+  const {
+    restaurants,
+    isLoading: restaurantsLoading,
+    error: restaurantsError,
+    currentZoom,
+    updateMapView,
+    refreshRestaurants,
+    shouldShowRestaurants,
+  } = useRestaurants({
+    minZoomLevel: 14,
+    searchRadius: 1000,
+    minRating: 0,
+    maxPrice: 4,
+  });
 
   const categories = [
     { id: "restaurants", name: "Restaurants", icon: Utensils },
@@ -43,49 +64,22 @@ const SearchPage = () => {
     { id: "attractions", name: "Attractions", icon: Camera },
   ];
 
-  const nearbyPlaces = [
-    {
-      id: 1,
-      name: "Katz's Delicatessen",
-      rating: 4.5,
-      reviews: 2891,
-      image: "IMG",
-      position: { lat: 40.7223, lng: -73.9874 },
-    },
-    {
-      id: 2,
-      name: "Joe's Pizza",
-      rating: 5,
-      reviews: 1456,
-      image: "IMG",
-      position: { lat: 40.7308, lng: -73.9973 },
-    },
-    {
-      id: 3,
-      name: "Peter Luger",
-      rating: 4.5,
-      reviews: 987,
-      image: "IMG",
-      position: { lat: 40.7099, lng: -73.9626 },
-    },
-  ];
-
-  // Convert places to map markers
-  const mapMarkers = nearbyPlaces.map((place) => ({
-    position: place.position,
-    title: place.name,
+  // Convert restaurants to map markers
+  const restaurantMarkers = restaurants.map((restaurant) => ({
+    position: restaurant.position,
+    title: restaurant.name,
   }));
 
   // Add user location marker if available
   const allMarkers = userLocation
     ? [
-        ...mapMarkers,
+        ...restaurantMarkers,
         {
           position: userLocation,
           title: "Your Location",
         },
       ]
-    : mapMarkers;
+    : restaurantMarkers;
 
   const handleMarkerClick = (marker: any) => {
     console.log("Marker clicked:", marker.title);
@@ -98,6 +92,14 @@ const SearchPage = () => {
     } else {
       getCurrentLocation();
     }
+  };
+
+  const handleMapZoomChanged = (zoom: number) => {
+    updateMapView(userLocation || { lat: 40.7128, lng: -74.006 }, zoom);
+  };
+
+  const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
+    updateMapView(center, currentZoom);
   };
 
   useEffect(() => {
@@ -164,12 +166,18 @@ const SearchPage = () => {
           {/* Image Placeholder */}
           <div className="search-card w-full h-48 bg-muted rounded-lg flex items-center justify-center mb-6">
             <span className="text-muted-foreground">
-              Sushi Restaurant Interior
+              {restaurants.length > 0
+                ? `${restaurants[0]?.name} Interior`
+                : "Restaurant Interior"}
             </span>
           </div>
 
           {/* Restaurant Name */}
-          <h1 className="text-2xl font-bold mb-4">Blue Ribbon Sushi</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            {restaurants.length > 0
+              ? restaurants[0]?.name
+              : "Blue Ribbon Sushi"}
+          </h1>
 
           {/* Rating */}
           <div className="flex items-center space-x-2 mb-4">
@@ -178,26 +186,34 @@ const SearchPage = () => {
                 <Star
                   key={i}
                   className={`h-4 w-4 ${
-                    i < 4
+                    i < (restaurants[0]?.rating || 4)
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-muted-foreground"
                   }`}
                 />
               ))}
             </div>
-            <span className="text-muted-foreground">(1,247 reviews)</span>
+            <span className="text-muted-foreground">
+              ({restaurants[0]?.reviews || 1247} reviews)
+            </span>
           </div>
 
           {/* Price Range & Cuisine */}
           <div className="flex items-center space-x-4 mb-4">
-            <span className="text-muted-foreground">$$$$</span>
-            <span className="text-muted-foreground">Japanese, Sushi</span>
+            <span className="text-muted-foreground">
+              {restaurants[0]?.price || "$$$$"}
+            </span>
+            <span className="text-muted-foreground">
+              {restaurants[0]?.category || "Japanese, Sushi"}
+            </span>
           </div>
 
           {/* Ranking */}
           <div className="mb-4">
-            <span className="text-muted-foreground">Ranking</span>
-            <p className="font-medium">#12 of 8,456 restaurants in NYC</p>
+            <span className="text-muted-foreground">Distance</span>
+            <p className="font-medium">
+              {restaurants[0]?.distance || "0.3 km"} from your location
+            </p>
           </div>
 
           {/* Badges */}
@@ -208,7 +224,7 @@ const SearchPage = () => {
             </Badge>
             <Badge variant="secondary" className="flex items-center space-x-1">
               <Utensils className="h-3 w-3" />
-              <span>Best Sushi 2025</span>
+              <span>{restaurants[0]?.category || "Restaurant"}</span>
             </Badge>
           </div>
 
@@ -216,15 +232,15 @@ const SearchPage = () => {
           <div className="space-y-3 mb-6">
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>Open until 11:00 PM</span>
+              <span>{restaurants[0]?.hours || "Open until 11:00 PM"}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>(212) 555-0123</span>
+              <span>{restaurants[0]?.phone || "(212) 555-0123"}</span>
             </div>
             <div className="flex items-center space-x-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>123 Sushi Street, NYC</span>
+              <span>{restaurants[0]?.address || "123 Sushi Street, NYC"}</span>
             </div>
           </div>
 
@@ -250,6 +266,8 @@ const SearchPage = () => {
               zoom={userLocation ? 15 : 14}
               markers={allMarkers}
               onMarkerClick={handleMarkerClick}
+              onZoomChanged={handleMapZoomChanged}
+              onCenterChanged={handleMapCenterChanged}
               className="w-full h-full"
             />
           </div>
@@ -264,41 +282,83 @@ const SearchPage = () => {
               size="icon"
               className="center-location-btn"
               onClick={handleCenterOnLocation}
-              disabled={isLoading}
+              disabled={locationLoading}
             >
               <Crosshair className="h-4 w-4" />
             </Button>
           </div>
 
+          {/* Loading indicator */}
+          {restaurantsLoading && (
+            <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur px-3 py-2 rounded-lg shadow-lg">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Loading restaurants...</span>
+              </div>
+            </div>
+          )}
+
           {/* Nearby Restaurants Card */}
           <div className="absolute top-4 left-4 w-80">
             <Card className="bg-background/95 backdrop-blur">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-3">Nearby Restaurants</h3>
+                <h3 className="font-semibold mb-3">
+                  Nearby Restaurants
+                  {restaurants.length > 0 && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      ({restaurants.length})
+                    </span>
+                  )}
+                </h3>
                 <div className="space-y-3">
-                  {nearbyPlaces.map((place) => (
-                    <div
-                      key={place.id}
-                      className="nearby-restaurant flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    >
-                      <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-                        {place.image}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">
-                          {place.name}
-                        </h4>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <div className="flex items-center">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
-                            <span>{place.rating}</span>
+                  {restaurants.length > 0 ? (
+                    restaurants.map((restaurant) => (
+                      <div
+                        key={restaurant.id}
+                        className="nearby-restaurant flex items-center space-x-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                      >
+                        <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                          {restaurant.image}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">
+                            {restaurant.name}
+                          </h4>
+                          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                            <div className="flex items-center">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                              <span>{restaurant.rating}</span>
+                            </div>
+                            <span>({restaurant.reviews})</span>
+                            <span>•</span>
+                            <span>{restaurant.distance}</span>
                           </div>
-                          <span>({place.reviews})</span>
                         </div>
                       </div>
+                    ))
+                  ) : shouldShowRestaurants && !restaurantsLoading ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">
+                        No restaurants found in this area
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">
+                        {userLocation
+                          ? "Zoom in to see restaurants near you"
+                          : "Enable location to see nearby restaurants"}
+                      </p>
+                    </div>
+                  )}
                 </div>
+                {restaurantsError && (
+                  <p className="text-xs text-destructive mt-2">
+                    {restaurantsError}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

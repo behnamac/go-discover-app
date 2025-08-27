@@ -46,6 +46,8 @@ A modern travel discovery application built with React, TypeScript, and Tailwind
    VITE_GOOGLE_MAPS_MAP_ID=your_map_id_here
    ```
 
+**Note**: The app will work with just Google Places API. RapidAPI is optional for additional data sources.
+
 ### Installation
 
 1. Clone the repository:
@@ -61,7 +63,7 @@ cd go-discover-app
 npm install
 ```
 
-3. Set up your Google Maps API key (see above)
+3. Set up your API keys (see above)
 
 4. Start the development server:
 
@@ -69,7 +71,7 @@ npm install
 npm run dev
 ```
 
-5. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:8083`
 
 ## Available Scripts
 
@@ -88,17 +90,36 @@ src/
 │   └── Layout/    # Layout components
 ├── pages/         # Page components
 ├── hooks/         # Custom React hooks
+├── services/      # API services
+├── contexts/      # React contexts
 ├── lib/           # Utility functions
 └── assets/        # Static assets
 ```
 
-## Map Features
+## Features
+
+### Map Features
 
 - **Interactive Google Maps**: Real-time map with markers
 - **Location Markers**: Clickable markers for nearby places
 - **Responsive Design**: Maps adapt to different screen sizes
 - **Custom Styling**: Clean, modern map appearance
 - **Marker Interactions**: Click handlers for place details
+
+### Restaurant Features
+
+- **Zoom-based Loading**: Restaurants load when zoomed to level 14+
+- **Real-time Data**: Fetches restaurants from Google Places API
+- **Location-aware**: Shows restaurants near user's location
+- **Debounced Search**: Efficient API calls with debouncing
+- **Fallback Data**: Mock data when API is unavailable
+
+### Animation Features
+
+- **GSAP Animations**: Smooth entrance and interaction animations
+- **Scroll-triggered**: Animations activate on scroll
+- **Hover Effects**: Interactive card and button animations
+- **Loading States**: Animated loading indicators
 
 ## Contributing
 

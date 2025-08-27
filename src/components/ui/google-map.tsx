@@ -16,6 +16,8 @@ interface GoogleMapProps {
   }>;
   onMapClick?: (event: google.maps.MapMouseEvent) => void;
   onMarkerClick?: (marker: any) => void;
+  onZoomChanged?: (zoom: number) => void;
+  onCenterChanged?: (center: { lat: number; lng: number }) => void;
 }
 
 const MapComponent = ({
@@ -26,6 +28,8 @@ const MapComponent = ({
   markers = [],
   onMapClick,
   onMarkerClick,
+  onZoomChanged,
+  onCenterChanged,
 }: GoogleMapProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -61,6 +65,29 @@ const MapComponent = ({
           newMap.addListener("click", onMapClick);
         }
 
+        // Add zoom change listener
+        if (onZoomChanged) {
+          newMap.addListener("zoom_changed", () => {
+            const currentZoom = newMap.getZoom();
+            if (currentZoom !== undefined) {
+              onZoomChanged(currentZoom);
+            }
+          });
+        }
+
+        // Add center change listener
+        if (onCenterChanged) {
+          newMap.addListener("center_changed", () => {
+            const currentCenter = newMap.getCenter();
+            if (currentCenter) {
+              onCenterChanged({
+                lat: currentCenter.lat(),
+                lng: currentCenter.lng(),
+              });
+            }
+          });
+        }
+
         // Animate map entrance
         gsap.fromTo(
           ref.current,
@@ -78,7 +105,16 @@ const MapComponent = ({
         console.error("Error creating Google Map:", error);
       }
     }
-  }, [ref, map, center, zoom, onMapClick, mapId]);
+  }, [
+    ref,
+    map,
+    center,
+    zoom,
+    onMapClick,
+    onZoomChanged,
+    onCenterChanged,
+    mapId,
+  ]);
 
   // Handle markers
   useEffect(() => {

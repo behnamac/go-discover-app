@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import GoogleMap from "@/components/ui/google-map";
 import { useLocation } from "@/contexts/LocationContext";
+import { useRestaurants } from "@/hooks/use-restaurants";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import {
@@ -22,65 +23,48 @@ import {
   Navigation,
   Layers,
   Crosshair,
+  Loader2,
 } from "lucide-react";
 
 const MapSection = () => {
-  const { userLocation, getCurrentLocation, isLoading } = useLocation();
+  const {
+    userLocation,
+    getCurrentLocation,
+    isLoading: locationLoading,
+  } = useLocation();
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Mock nearby places data - in a real app, this would be fetched based on user location
-  const nearbyPlaces = [
-    {
-      id: 1,
-      name: "Coastal Breeze Restaurant",
-      category: "Restaurant",
-      rating: 4.8,
-      distance: "0.3 km",
-      price: "$$",
-      image: "🏖️",
-      description: "Fresh seafood with ocean views",
-      position: { lat: 40.7128, lng: -74.006 },
-    },
-    {
-      id: 2,
-      name: "Sunset Beach",
-      category: "Beach",
-      rating: 4.9,
-      distance: "0.8 km",
-      price: "Free",
-      image: "🏖️",
-      description: "Crystal clear waters and white sand",
-      position: { lat: 40.7089, lng: -74.009 },
-    },
-    {
-      id: 3,
-      name: "Vista Hotel",
-      category: "Hotel",
-      rating: 4.6,
-      distance: "1.2 km",
-      price: "$$$",
-      image: "🏨",
-      description: "Luxury accommodation with panoramic views",
-      position: { lat: 40.7168, lng: -74.003 },
-    },
-  ];
+  const {
+    restaurants,
+    isLoading: restaurantsLoading,
+    error: restaurantsError,
+    currentZoom,
+    updateMapView,
+    refreshRestaurants,
+    shouldShowRestaurants,
+  } = useRestaurants({
+    minZoomLevel: 14,
+    searchRadius: 1000,
+    minRating: 0,
+    maxPrice: 4,
+  });
 
-  // Convert places to map markers
-  const mapMarkers = nearbyPlaces.map((place) => ({
-    position: place.position,
-    title: place.name,
+  // Convert restaurants to map markers
+  const restaurantMarkers = restaurants.map((restaurant) => ({
+    position: restaurant.position,
+    title: restaurant.name,
   }));
 
   // Add user location marker if available
   const allMarkers = userLocation
     ? [
-        ...mapMarkers,
+        ...restaurantMarkers,
         {
           position: userLocation,
           title: "Your Location",
         },
       ]
-    : mapMarkers;
+    : restaurantMarkers;
 
   const handleMarkerClick = (marker: any) => {
     console.log("Marker clicked:", marker.title);
@@ -94,6 +78,14 @@ const MapSection = () => {
     } else {
       getCurrentLocation();
     }
+  };
+
+  const handleMapZoomChanged = (zoom: number) => {
+    updateMapView(userLocation || { lat: 40.7128, lng: -74.006 }, zoom);
+  };
+
+  const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
+    updateMapView(center, currentZoom);
   };
 
   useEffect(() => {
@@ -157,6 +149,11 @@ const MapSection = () => {
                   </Badge>
                 </div>
               )}
+              {currentZoom < 14 && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Zoom in to see nearby restaurants
+                </div>
+              )}
             </div>
 
             {/* Map Container */}
@@ -166,6 +163,8 @@ const MapSection = () => {
                 zoom={userLocation ? 15 : 14}
                 markers={allMarkers}
                 onMarkerClick={handleMarkerClick}
+                onZoomChanged={handleMapZoomChanged}
+                onCenterChanged={handleMapCenterChanged}
                 className="w-full h-full"
               />
 
@@ -179,11 +178,21 @@ const MapSection = () => {
                   size="icon"
                   className="center-location-btn"
                   onClick={handleCenterOnLocation}
-                  disabled={isLoading}
+                  disabled={locationLoading}
                 >
                   <Crosshair className="h-4 w-4" />
                 </Button>
               </div>
+
+              {/* Loading indicator */}
+              {restaurantsLoading && (
+                <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur px-3 py-2 rounded-lg shadow-lg">
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">Loading restaurants...</span>
+                  </div>
+                </div>
+              )}
             </Card>
 
             <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground">
@@ -193,7 +202,7 @@ const MapSection = () => {
               </div>
               <div className="flex items-center space-x-1">
                 <div className="w-3 h-3 rounded-full bg-cta"></div>
-                <span>Recommendations</span>
+                <span>Restaurants</span>
               </div>
               <div className="flex items-center space-x-1">
                 <div className="w-3 h-3 rounded-full bg-accent"></div>
@@ -208,53 +217,75 @@ const MapSection = () => {
               <h3 className="text-2xl font-bold mb-2">Nearby Places</h3>
               <p className="text-muted-foreground">
                 {userLocation
-                  ? "Discover what's around you right now"
+                  ? shouldShowRestaurants
+                    ? `Found ${restaurants.length} restaurants nearby`
+                    : "Zoom in to see restaurants near you"
                   : "Enable location to see places near you"}
               </p>
+              {restaurantsError && (
+                <p className="text-sm text-destructive mt-2">
+                  {restaurantsError}
+                </p>
+              )}
             </div>
 
             <div className="space-y-4">
-              {nearbyPlaces.map((place) => (
-                <Card
-                  key={place.id}
-                  className="nearby-place hover:shadow-card transition-smooth cursor-pointer border-border/40"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start space-x-4">
-                      <div className="text-4xl">{place.image}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h4 className="font-semibold text-lg">
-                              {place.name}
-                            </h4>
-                            <p className="text-sm text-muted-foreground">
-                              {place.description}
-                            </p>
+              {restaurants.length > 0 ? (
+                restaurants.map((restaurant) => (
+                  <Card
+                    key={restaurant.id}
+                    className="nearby-place hover:shadow-card transition-smooth cursor-pointer border-border/40"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start space-x-4">
+                        <div className="text-4xl">{restaurant.image}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-semibold text-lg">
+                                {restaurant.name}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                {restaurant.description}
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className="ml-2">
+                              {restaurant.category}
+                            </Badge>
                           </div>
-                          <Badge variant="secondary" className="ml-2">
-                            {place.category}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm">
-                          <div className="flex items-center space-x-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span>{place.rating}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{place.distance}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <DollarSign className="h-4 w-4" />
-                            <span>{place.price}</span>
+                          <div className="flex items-center space-x-4 text-sm">
+                            <div className="flex items-center space-x-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span>{restaurant.rating}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{restaurant.distance}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <DollarSign className="h-4 w-4" />
+                              <span>{restaurant.price}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : shouldShowRestaurants && !restaurantsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No restaurants found in this area</p>
+                  <p className="text-sm">
+                    Try zooming out or moving to a different location
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Enable location and zoom in to see nearby restaurants</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
