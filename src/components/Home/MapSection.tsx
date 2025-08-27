@@ -39,6 +39,7 @@ const MapSection = () => {
     isLoading: restaurantsLoading,
     error: restaurantsError,
     currentZoom,
+    mapCenter,
     updateMapView,
     refreshRestaurants,
     shouldShowRestaurants,
@@ -81,7 +82,10 @@ const MapSection = () => {
   };
 
   const handleMapZoomChanged = (zoom: number) => {
-    updateMapView(userLocation || { lat: 40.7128, lng: -74.006 }, zoom);
+    // Use current map center instead of user location for zoom changes
+    const currentCenter = mapCenter ||
+      userLocation || { lat: 40.7128, lng: -74.006 };
+    updateMapView(currentCenter, zoom);
   };
 
   const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
@@ -218,9 +222,9 @@ const MapSection = () => {
               <p className="text-muted-foreground">
                 {userLocation
                   ? shouldShowRestaurants
-                    ? `Found ${restaurants.length} restaurants nearby`
-                    : "Zoom in to see restaurants near you"
-                  : "Enable location to see places near you"}
+                    ? `Found ${restaurants.length} restaurants in this area`
+                    : "Zoom in to see restaurants in this area"
+                  : "Zoom in to see restaurants anywhere on the map"}
               </p>
               {restaurantsError && (
                 <p className="text-sm text-destructive mt-2">
@@ -283,7 +287,7 @@ const MapSection = () => {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Enable location and zoom in to see nearby restaurants</p>
+                  <p>Zoom in to see restaurants anywhere on the map</p>
                 </div>
               )}
             </div>

@@ -52,9 +52,9 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
     []
   );
 
-  // Search restaurants when location or zoom changes
+  // Search restaurants when map center or zoom changes
   useEffect(() => {
-    if (!userLocation || !mapCenter) return;
+    if (!mapCenter) return;
 
     // Only search if zoom level is sufficient
     if (currentZoom >= minZoomLevel) {
@@ -71,7 +71,6 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
       setRestaurants([]);
     }
   }, [
-    userLocation,
     mapCenter,
     currentZoom,
     minZoomLevel,
@@ -92,7 +91,7 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
 
   // Refresh restaurants
   const refreshRestaurants = useCallback(async () => {
-    if (!userLocation || !mapCenter) return;
+    if (!mapCenter) return;
 
     const searchParams: RestaurantSearchParams = {
       location: mapCenter,
@@ -102,14 +101,7 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
     };
 
     await debouncedSearch(searchParams);
-  }, [
-    userLocation,
-    mapCenter,
-    searchRadius,
-    minRating,
-    maxPrice,
-    debouncedSearch,
-  ]);
+  }, [mapCenter, searchRadius, minRating, maxPrice, debouncedSearch]);
 
   // Clear restaurants
   const clearRestaurants = useCallback(() => {

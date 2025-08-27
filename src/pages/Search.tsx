@@ -48,6 +48,7 @@ const SearchPage = () => {
     isLoading: restaurantsLoading,
     error: restaurantsError,
     currentZoom,
+    mapCenter,
     updateMapView,
     refreshRestaurants,
     shouldShowRestaurants,
@@ -95,7 +96,10 @@ const SearchPage = () => {
   };
 
   const handleMapZoomChanged = (zoom: number) => {
-    updateMapView(userLocation || { lat: 40.7128, lng: -74.006 }, zoom);
+    // Use current map center instead of user location for zoom changes
+    const currentCenter = mapCenter ||
+      userLocation || { lat: 40.7128, lng: -74.006 };
+    updateMapView(currentCenter, zoom);
   };
 
   const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
@@ -145,7 +149,9 @@ const SearchPage = () => {
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={
-                  userLocation ? "Search near you..." : "New York, NY, USA"
+                  userLocation
+                    ? "Search in this area..."
+                    : "Search anywhere on the map..."
                 }
                 className="pl-10 bg-background/50 border-border/40 focus:border-primary/40 transition-smooth"
               />
@@ -348,8 +354,8 @@ const SearchPage = () => {
                       <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">
                         {userLocation
-                          ? "Zoom in to see restaurants near you"
-                          : "Enable location to see nearby restaurants"}
+                          ? "Zoom in to see restaurants in this area"
+                          : "Zoom in to see restaurants anywhere on the map"}
                       </p>
                     </div>
                   )}
