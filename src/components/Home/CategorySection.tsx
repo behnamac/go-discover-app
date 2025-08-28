@@ -4,7 +4,7 @@ import { useCategoryData } from "@/hooks/useCategoryData";
 
 const FeaturesSection = () => {
   const { features } = useCategoryData();
-  
+
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
