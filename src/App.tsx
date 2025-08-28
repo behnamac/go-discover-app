@@ -8,9 +8,9 @@ import { LocationProvider } from "@/contexts/LocationContext";
 import Index from "./pages/Index";
 import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
-import RestaurantAPI from "./api/RestaurantAPI";
-import RestaurantDetailsAPI from "./api/RestaurantDetailsAPI";
-import APITestRoute from "./api/APITestRoute";
+import RestaurantAPI from "./routes/api/RestaurantAPI";
+import RestaurantDetailsAPI from "./routes/api/RestaurantDetailsAPI";
+import APITestRoute from "./routes/api/APITestRoute";
 
 const queryClient = new QueryClient();
 
