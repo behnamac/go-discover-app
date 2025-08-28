@@ -6,7 +6,7 @@ interface APITestResult {
   timestamp: string;
 }
 
-const APITestRoute = () => {
+export const useAPITest = () => {
   const [testResult, setTestResult] = useState<APITestResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -83,23 +83,9 @@ const APITestRoute = () => {
     testAPIConnectivity();
   }, []);
 
-  // Return data as JSON
-  return (
-    <div style={{ display: 'none' }}>
-      {loading && <div>Testing APIs...</div>}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.apiTestResponse = ${JSON.stringify({
-              result: testResult,
-              loading,
-              timestamp: new Date().toISOString(),
-            })};
-          `,
-        }}
-      />
-    </div>
-  );
+  return {
+    testResult,
+    loading,
+    testAPIConnectivity,
+  };
 };
-
-export default APITestRoute;
