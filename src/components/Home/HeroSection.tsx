@@ -8,7 +8,7 @@ import { useHeroAnimations } from "@/hooks/hero";
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  
+
   // Initialize all hero animations
   useHeroAnimations();
 
