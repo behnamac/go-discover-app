@@ -98,9 +98,16 @@ const SearchPage = () => {
 
   const handleCenterOnLocation = () => {
     buttonClick(".center-location-btn");
+    console.log("📍 Location button clicked");
     if (userLocation) {
-      console.log("Centering on user location:", userLocation);
+      console.log("📍 Centering on user location:", userLocation);
+      updateMapView(userLocation, 15);
     } else {
+      console.log("📍 Requesting location permission...");
+      // Show a simple alert to guide the user
+      alert(
+        "Please allow location access when prompted to center the map on your location."
+      );
       getCurrentLocation();
     }
   };
@@ -114,6 +121,7 @@ const SearchPage = () => {
 
   const handleMapCenterChanged = (center: { lat: number; lng: number }) => {
     console.log("🗺️ Map center changed to:", center);
+    console.log("🗺️ Current mapCenter state:", mapCenter);
     updateMapView(center, currentZoom);
   };
 
@@ -128,12 +136,41 @@ const SearchPage = () => {
     }
   };
 
+  const handleManualSearch = async () => {
+    console.log("🔍 Manual search triggered");
+    console.log("🔍 Current mapCenter:", mapCenter);
+    if (mapCenter) {
+      const searchParams = {
+        location: mapCenter,
+        radius: 1000,
+        minRating: 0,
+        maxPrice: 4,
+      };
+      console.log("🔍 Manual search params:", searchParams);
+      await refreshRestaurants();
+    }
+  };
+
   // Initialize map center when component loads
   useEffect(() => {
-    const initialCenter = userLocation || { lat: 40.7128, lng: -74.006 };
-    console.log("🗺️ Initializing map center:", initialCenter);
-    updateMapView(initialCenter, userLocation ? 15 : 14);
-  }, [userLocation]); // Removed updateMapView from dependencies
+    console.log("🗺️ Component mounted, userLocation:", userLocation);
+
+    // Don't automatically request location - let user click the button
+    if (!userLocation) {
+      console.log("🗺️ No user location, using default location");
+      // Use a default location (New York) until user grants permission
+      const defaultLocation = { lat: 40.7128, lng: -74.006 };
+      updateMapView(defaultLocation, 14);
+    }
+  }, []); // Only run once on mount
+
+  // Update map when user location changes
+  useEffect(() => {
+    if (userLocation) {
+      console.log("🗺️ User location changed, updating map:", userLocation);
+      updateMapView(userLocation, 15);
+    }
+  }, [userLocation, updateMapView]);
 
   useEffect(() => {
     if (pageRef.current) {
@@ -184,13 +221,46 @@ const SearchPage = () => {
                 }
                 className="pl-10 bg-background/50 border-border/40 focus:border-primary/40 transition-smooth"
               />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                {locationLoading && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+                {userLocation && !locationLoading && (
+                  <div
+                    className="h-2 w-2 rounded-full bg-green-500"
+                    title="Location active"
+                  />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Action Button */}
-          <Button variant="hero" className="hidden md:flex">
-            Explore new places
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleCenterOnLocation}
+              variant="hero"
+              size="sm"
+              className="flex items-center space-x-2 center-location-btn"
+            >
+              <Crosshair className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {userLocation ? "My Location" : "Get My Location"}
+              </span>
+            </Button>
+            <Button
+              onClick={handleManualSearch}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">Search</span>
+            </Button>
+            <Button variant="outline" className="hidden md:flex">
+              Explore new places
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -217,8 +217,76 @@ class RestaurantService {
         data.data.slice(0, 3).map((r) => r.name)
       );
 
+      // Log categories to see what we're getting
+      console.log(
+        "🍕 Categories in response:",
+        data.data.map((r: any) => ({
+          name: r.name,
+          category: r.category?.name,
+          cuisine: r.cuisine?.[0]?.name,
+          type: r.type,
+        }))
+      );
+
       const finalRestaurants = data.data
-        .filter((place: any) => place.rating >= minRating)
+        .filter((place: any) => {
+          // Filter by rating
+          if (place.rating < minRating) return false;
+
+          // The API already filters for restaurants, but let's double-check
+          const category = place.category?.name?.toLowerCase() || "";
+          const name = place.name?.toLowerCase() || "";
+
+          // Exclude obvious non-restaurant places
+          const nonRestaurantKeywords = [
+            "museum",
+            "gallery",
+            "theater",
+            "cinema",
+            "park",
+            "garden",
+            "monument",
+            "statue",
+            "tower",
+            "bridge",
+            "castle",
+            "palace",
+            "temple",
+            "church",
+            "mosque",
+            "synagogue",
+            "shrine",
+            "attraction",
+            "landmark",
+            "viewpoint",
+            "observation",
+            "tour",
+            "experience",
+            "adventure",
+            "entertainment",
+            "amusement",
+            "zoo",
+            "aquarium",
+            "hotel",
+            "hostel",
+            "resort",
+            "spa",
+            "gym",
+            "fitness",
+          ];
+
+          // Check if it's clearly not a restaurant
+          const isNotRestaurant = nonRestaurantKeywords.some(
+            (keyword) => category.includes(keyword) || name.includes(keyword)
+          );
+
+          console.log(
+            `🍕 Filtering ${place.name}: category=${category}, isNotRestaurant=${isNotRestaurant}`
+          );
+
+          // Include if it's not clearly a non-restaurant place
+          return !isNotRestaurant;
+        })
         .map((place: any, index: number) => {
           console.log(`🍕 Processing restaurant ${index}: ${place.name}`);
           // Validate coordinates

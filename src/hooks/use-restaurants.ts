@@ -4,6 +4,7 @@ import {
   Restaurant,
   RestaurantSearchParams,
 } from "@/services/restaurantService";
+import { apiService } from "@/services/apiService";
 import { useLocation } from "@/contexts/LocationContext";
 
 interface UseRestaurantsOptions {
@@ -40,7 +41,8 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
         setIsLoading(true);
         setError(null);
 
-        const results = await restaurantService.searchNearbyRestaurants(params);
+        // Use the new API service instead of direct restaurant service
+        const results = await apiService.searchRestaurants(params);
         console.log(
           "🍕 Setting restaurants in state:",
           results.length,
@@ -51,10 +53,6 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
           results[0]?.name,
           "at",
           results[0]?.position
-        );
-        console.log(
-          "🍕 About to set restaurants in state. Current count:",
-          restaurants.length
         );
         setRestaurants([...results]); // Force new array reference
         console.log("🍕 Restaurants state updated");
@@ -67,7 +65,7 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
         setIsLoading(false);
       }
     },
-    [restaurants.length]
+    [] // Remove restaurants.length dependency
   );
 
   // Debounced search function
@@ -117,13 +115,14 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
       setRestaurants([]);
     }
   }, [
-    mapCenter,
+    mapCenter?.lat, // Only depend on lat/lng values, not the entire object
+    mapCenter?.lng,
     currentZoom,
     minZoomLevel,
     searchRadius,
     minRating,
     maxPrice,
-    debouncedSearch,
+    directSearch, // Add back but with stable reference
   ]);
 
   // Update map center and zoom
@@ -137,7 +136,7 @@ export const useRestaurants = (options: UseRestaurantsOptions = {}) => {
 
       console.log("🗺️ State update triggered for:", center);
     },
-    []
+    [] // Keep empty to prevent loops
   );
 
   // Refresh restaurants
