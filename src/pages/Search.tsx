@@ -26,14 +26,13 @@ import {
   Phone,
   Heart,
   Crown,
-  Utensils,
-  Bed,
-  Camera,
   Navigation,
   Crosshair,
   Layers,
   Loader2,
+  Utensils,
 } from "lucide-react";
+import { useSearchData } from "@/hooks/useSearchData";
 
 const SearchPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("restaurants");
@@ -69,11 +68,7 @@ const SearchPage = () => {
     console.log("🍕 First restaurant in render:", restaurants[0]?.name);
   }
 
-  const categories = [
-    { id: "restaurants", name: "Restaurants", icon: Utensils },
-    { id: "hotels", name: "Hotels", icon: Bed },
-    { id: "attractions", name: "Attractions", icon: Camera },
-  ];
+  const { categories } = useSearchData();
 
   // Convert restaurants to map markers
   const restaurantMarkers = restaurants.map((restaurant) => ({

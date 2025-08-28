@@ -586,72 +586,8 @@ class RestaurantService {
     const locationHash = Math.abs(location.lat * 1000 + location.lng * 1000);
     const seed = Math.floor(locationHash) % 1000;
 
-    const restaurantNames = [
-      "The Golden Fork",
-      "Sapphire Kitchen",
-      "Emerald Eats",
-      "Ruby's Diner",
-      "Diamond Delights",
-      "Crystal Cafe",
-      "Pearl Palace",
-      "Amber Avenue",
-      "Topaz Tavern",
-      "Jade Junction",
-      "Coral Corner",
-      "Azure Alley",
-      "Violet Vista",
-      "Indigo Inn",
-      "Maroon Market",
-      "Teal Terrace",
-      "Lavender Lane",
-      "Crimson Corner",
-      "Sage Street",
-      "Copper Cafe",
-    ];
-
-    const restaurantTypes = [
-      { name: "Restaurant", icon: "🍽️" },
-      { name: "Cafe", icon: "☕" },
-      { name: "Pizzeria", icon: "🍕" },
-      { name: "Sushi Bar", icon: "🍣" },
-      { name: "Burger Joint", icon: "🍔" },
-      { name: "Taco Shop", icon: "🌮" },
-      { name: "Steakhouse", icon: "🥩" },
-      { name: "Seafood", icon: "🦐" },
-      { name: "Bakery", icon: "🥐" },
-      { name: "Deli", icon: "🥪" },
-    ];
-
-    const streetNames = [
-      "Main Street",
-      "Oak Avenue",
-      "Pine Road",
-      "Elm Street",
-      "Maple Drive",
-      "Cedar Lane",
-      "Birch Boulevard",
-      "Willow Way",
-      "Cherry Circle",
-      "Aspen Alley",
-      "Spruce Street",
-      "Hickory Highway",
-      "Poplar Place",
-      "Sycamore Square",
-      "Beech Bend",
-    ];
-
-    const descriptions = [
-      "Authentic local cuisine with a modern twist",
-      "Cozy atmosphere with exceptional service",
-      "Fresh ingredients sourced from local farms",
-      "Family-owned establishment with traditional recipes",
-      "Contemporary dining with international flavors",
-      "Rustic charm meets culinary excellence",
-      "Artisanal dishes in a relaxed setting",
-      "Gourmet experience at affordable prices",
-      "Home-style cooking with a gourmet touch",
-      "Innovative menu featuring seasonal specialties",
-    ];
+    // Import mock data
+    const { restaurantNames, restaurantTypes, descriptions, streetNames } = require("@/data/mockRestaurantData");
 
     const mockRestaurants: Restaurant[] = [];
 

@@ -1,0 +1,61 @@
+export const restaurantNames = [
+  "Coastal Breeze Restaurant",
+  "Sunset Beach Cafe",
+  "Vista Hotel Restaurant",
+  "Harbor View Grill",
+  "Mountain Peak Bistro",
+  "Urban Kitchen",
+  "Riverside Dining",
+  "Skyline Restaurant",
+  "Garden Terrace Cafe",
+  "Oceanfront Bar & Grill",
+  "Downtown Deli",
+  "Artisan Bakery",
+  "Fusion Kitchen",
+  "Traditional Tavern",
+  "Modern Eatery",
+  "Heritage Restaurant",
+  "Innovation Cafe",
+  "Classic Diner",
+  "Gourmet Experience",
+  "Local Favorites",
+];
+
+export const restaurantTypes = [
+  { name: "Italian Restaurant", icon: "🍝" },
+  { name: "Japanese Sushi", icon: "🍣" },
+  { name: "American Grill", icon: "🍔" },
+  { name: "French Bistro", icon: "🥐" },
+  { name: "Mexican Cantina", icon: "🌮" },
+  { name: "Thai Kitchen", icon: "🍜" },
+  { name: "Indian Curry House", icon: "🍛" },
+  { name: "Greek Taverna", icon: "🥙" },
+  { name: "Chinese Wok", icon: "🥡" },
+  { name: "Mediterranean Cafe", icon: "🥗" },
+];
+
+export const descriptions = [
+  "A cozy restaurant with amazing views and delicious food.",
+  "Fresh ingredients and creative dishes in a relaxed atmosphere.",
+  "Traditional recipes with a modern twist.",
+  "Family-owned establishment serving authentic cuisine.",
+  "Upscale dining experience with exceptional service.",
+  "Casual eatery perfect for any occasion.",
+  "Farm-to-table restaurant with seasonal menus.",
+  "International flavors in a welcoming environment.",
+  "Artisanal food prepared with passion and care.",
+  "Local favorite with a reputation for quality.",
+];
+
+export const streetNames = [
+  "Main Street",
+  "Ocean Drive",
+  "Mountain View",
+  "Riverside Avenue",
+  "Downtown Boulevard",
+  "Harbor Road",
+  "Sunset Lane",
+  "Garden Path",
+  "Central Plaza",
+  "Waterfront Way",
+];
